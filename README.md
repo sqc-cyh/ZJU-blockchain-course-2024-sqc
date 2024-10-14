@@ -52,11 +52,76 @@
 
 建议分点列出。
 
+
+#### 1.登录
+
+
 ## 项目运行截图
 
-放一些项目运行截图。
-
 项目运行成功的关键页面和流程截图。主要包括操作流程以及和区块链交互的截图。
+
+#### 部署与配置
+部署到ganache
+![alt text](image.png)
+
+将deploy得到的地址填入`contract-addresses.json`
+![alt text](image-1.png)
+
+部署成功后ganache中10个账户初始状态（余额）如下图所示：
+![alt text](image-2.png)
+![alt text](image-3.png)
+
+前端运行`npm start`启动
+
+初始界面如下图所示：
+![alt text](image-5.png)
+
+点击连接钱包，会弹出metamask进行登录：
+![alt text](1728904677625.png)
+
+登录成功后：
+![alt text](image-6.png)
+
+首先分配三处房产，点击“分配三处房产”，确认交易后显示：
+![alt text](image-7.png)
+
+点击“获取正在出售的房屋”，当前没有任何房屋在出售状态：
+![alt text](image-8.png)
+
+点击“出售房产”：
+![alt text](image-9.png)
+
+输入2（房产积分），5（价格）后，并在metamask点击确认交易，再次点击“获取正在出售的房屋”，可见ID为2的房子被添加进了出售列表：
+![alt text](image-10.png)
+
+
+切换帐号进行购买，首先兑换ERC20积分，点击“兑换ERC20积分”按钮：
+![alt text](image-11.png)
+
+输入6个ETH，兑换6个ERC积分（1：1汇率）：
+![alt text](image-12.png)
+![alt text](image-13.png)
+
+再次兑换6个ERC积分，并点击“查询ERC余额”进行查看：
+![alt text](image-15.png)
+
+点击“购买”按钮：
+![alt text](image-16.png)
+
+购买成功后状态如下图所示：
+![alt text](image-17.png)
+
+点击ganache可以查看到该用户花费了12个以太币兑换了12个ERC积分（另外还有一些手续费，它的余额从90.00ETH变成了77.99ETH）
+![alt text](image-18.png)
+
+重新登录买房子的账户，可以看到获得了4.9个ERC积分（一部分用于手续费），同时该用户持有的房子从3个变成了2个。
+![alt text](image-19.png)
+
+再次点击“获取正在出售的房屋”：
+![alt text](image-20.png)
+
+以下是在这次交易中涉及到的block（ganache中显示）：
+![alt text](image-21.png)
 
 ## 参考内容
 

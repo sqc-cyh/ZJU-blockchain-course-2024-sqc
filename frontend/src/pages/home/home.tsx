@@ -305,7 +305,7 @@ const HomePage = () => {
             render: (text: boolean) => (text ? '出售中' : '未出售'),
         },
         {
-            title: '列出时间',
+            title: '获得时间',
             dataIndex: 'listedTimestamp',
             key: 'listedTimestamp',
             render: (text: number) => new Date(text * 1000).toLocaleString(),
@@ -314,7 +314,7 @@ const HomePage = () => {
 
     return (
         <div>
-            <h1>欢迎来到 Home Page!</h1>
+            <h1>欢迎来到房屋交易系统!</h1>
             <div>
                 {loading ? (
                     <Spin tip="正在检查钱包连接..." />

@@ -73,7 +73,7 @@ contract BuyMyRoom is ERC721 {
         require(house.isForSale, "House is not for sale"); // 确保房屋在出售
 
         // 计算手续费
-        uint256 fee = (house.price * feePercentage) / 100;
+        uint256 fee = ((block.timestamp-house.listedTimestamp)/5000 + house.price * feePercentage) / 100;
         uint256 netPrice = house.price - fee;
 
         // 转账 ERC20 代币
