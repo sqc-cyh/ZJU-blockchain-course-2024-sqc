@@ -23,7 +23,7 @@
 
 ## 如何运行
 
-补充如何完整运行你的应用。
+如何完整运行我的应用。
 
 1. 在本地启动ganache应用。
 
@@ -35,8 +35,12 @@
     ```bash
     npx hardhat compile
     ```
-4. ...
-5. ...
+4. 部署到ganache，运行如下命令：
+    `npx hardhat run ./scripts/deploy.ts --network ganache`
+    ![alt text](./img/image.png)
+    
+5. 将deploy得到的地址填入`contract-addresses.json`
+    ![alt text](./img/image22.png)
 6. 在 `./frontend` 中安装需要的依赖，运行如下的命令：
     ```bash
     npm install
@@ -50,10 +54,40 @@
 
 简单描述：项目完成了要求的哪些功能？每个功能具体是如何实现的？
 
-建议分点列出。
 
+#### 1.登录和钱包连接
+登录和钱包连接的逻辑主要通过状态管理和一系列函数实现。首先，组件使用 useState 钩子管理 `account、loading、loadingHouses、erc20Balance` 等状态。用户连接钱包的逻辑在 `handleConnectWallet` 函数中处理，检查 `MetaMask` 是否存在，并请求用户连接钱包，成功后获取用户地址并调用 `fetchUserHouses` 获取房屋信息。在组件挂载时，通过 `useEffect` 钩子检查是否已有连接的账户，若有，则设置账户状态并获取房屋信息。同时用户可以通过 `handleLogout` 函数**退出连接**，重置相关状态并显示成功消息。
 
-#### 1.登录
+#### 2.分配三处房产
+用户点击“分配三处房产”按钮触发 onClaimTokenAirdrop 函数。首先检查用户是否已连接钱包。如果未连接，则提示用户连接钱包。成功连接后，调用合约的 `assignThreeUnownedHousesToUser` 方法进行房产分配。该方法在合约中检查用户是否已经领取过房产，若没有，则铸造三处新房产并将其分配给用户，同时更新状态 `claimedAirdropPlayerList[msg.sender] = true;`以避免重复领取。如果操作成功，用户会收到确认消息，并通过页面刷新显示他们的新房产信息。
+其中房屋信息通过以下结构体存储：
+```sol
+struct House {
+        uint256 tokenId;         // 房屋ID
+        address owner;           // 房屋拥有者地址
+        uint256 listedTimestamp; // 列出时间戳
+        bool isForSale;         // 是否在出售
+        uint256 price;          // 出售价格
+    }
+
+    // 存储房屋信息的映射，房屋ID到房屋信息的映射
+    mapping(uint256 => House) public houses;
+```
+
+#### 3.获取正在出售的房屋
+用户点击“获取正在出售的房屋”按钮来调用 `fetchForSaleHouses 函数`。该函数会向合约中的 `getAllForSaleHouses` 方法发起请求，获取所有当前在出售的房屋信息。合约通过遍历存储的房屋数据，筛选出状态为“出售中”的房屋，并返回其详细信息。在前端，成功获取数据后，房屋信息将以表格的形式展示，用户可以看到每处房产的ID、拥有者、价格及状态等信息。若没有房屋在出售，系统会提示用户。目前没有房屋在出售。
+
+#### 4.出售房屋
+用户点击“出售房产”按钮，触发一个模态框，输入房产ID和价格后，调用 `handleListHouse` 函数。该函数首先验证用户输入的有效性，然后将房产ID和价格转换为合约所需的格式，通过调用合约的 `listHouse` 方法将房屋标记为出售`houses[tokenId].isForSale = true;`。在合约中，`listHouse` 函数会检查房屋的拥有者和价格的有效性，更新房屋的状态为“出售中”，并记录挂单时间。成功执行后，用户会收到确认消息，房屋状态更新为出售。
+
+#### 5.兑换ERC20积分
+用户点击“兑换 ERC20 积分”按钮，打开模态框并输入以太币数量，触发 `buyTokens` 函数。该函数首先验证用户输入的有效性，然后调用合约的 `buyTokens` 方法，将用户发送的以太币转换为 ERC20 积分。在合约中，`buyTokens` 函数接收以太币并铸造相应数量的 ERC20 代币给用户`rewardtoken.mint(msg.sender, tokensToMint);`，同时确保用户发送的以太币大于零。交易成功后，用户会收到确认消息，并且前端会刷新 ERC20 积分余额以显示最新的积分数量。
+
+#### 6.查询ERC20积分余额
+用户点击“查询 ERC20 余额”按钮，触发 `handleCheckErc20Balance` 函数。该函数首先检查用户是否已连接钱包，如果未连接，则提示用户连接钱包。成功连接后，调用合约的 `getUserTokenBalance` 方法获取当前用户的 ERC20 积分余额。在合约中，该方法返回调用者的积分余额。前端在成功获取余额后，在页面上反馈用户的当前积分状态。
+
+#### 7.购买房屋
+用户点击“购买”按钮，触发 `buyHouse` 函数，该函数接收房屋的 `tokenId` 和价格作为参数。该函数首先检查用户是否已连接钱包，并验证房屋是否在出售。成功后，调用合约的 `buyHouse` 方法，传入房屋的 `tokenId`。在合约中，`buyHouse` 函数会确认房屋出售状态，计算应支付的手续费和净价格，然后通过 ERC20 代币转账将手续费和房屋价格分别支付给合约拥有者和原房屋拥有者。房屋的所有权会被转移给购买者`houses[tokenId].owner = msg.sender;`，同时更新房屋状态为“未出售”`houses[tokenId].isForSale = false;`。交易成功后，前端会刷新用户的房屋信息和 ERC20 积分余额，并显示购买成功的消息。
 
 
 ## 项目运行截图
@@ -72,6 +106,8 @@
 ![alt text](./img/image-3.png)
 
 前端运行`npm start`启动
+
+#### 整体运行流程
 
 初始界面如下图所示：
 ![alt text](./img/image-5.png)
@@ -131,4 +167,22 @@
 
 - 如何实现ETH和ERC20的兑换？ [参考讲解](https://www.wtf.academy/en/docs/solidity-103/DEX/)
 
-如果有其它参考的内容，也请在这里陈列。
+- metamask如何自定义网络连接ganache [参考链接](https://blog.csdn.net/sanqima/article/details/120406660)
+
+- 合约中的相关操作（如变量的控制与选取）[参考链接](https://www.wtf.academy/docs/solidity-101/DataStorage/)
+
+- 合约教程参考 [参考链接1](https://learnblockchain.cn/docs/solidity/introduction-to-smart-contracts.html) [参考链接2](https://blog.csdn.net/a6taotao/article/details/112602580?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522163BA0B1-4EE0-4511-A8A0-E956130ED36B%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=163BA0B1-4EE0-4511-A8A0-E956130ED36B&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-112602580-null-null.142^v100^pc_search_result_base9&utm_term=%E6%99%BA%E8%83%BD%E5%90%88%E7%BA%A6&spm=1018.2226.3001.4187)
+
+- 部分合约的错误修正通过assistant助手找出,例如列出出售中房屋时写错了变量导致死循环: [参考链接poe.com](https://poe.com/)
+    ```sol
+    for (uint256 i = 0; a(一个用于调试的变量，后删除) < 3; i++) {
+           ……
+        }
+    ```
+    ![alt text](1728961003198.png)
+
+
+- 前端代码的学习与参考 [参考链接v0大模型](https://v0.dev/chat/cMU2ZE1Z5lj) 以及kimi大模型、assistant大模型
+    ![alt text](image.png)
+
+
