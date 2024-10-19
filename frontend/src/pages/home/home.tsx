@@ -167,7 +167,7 @@ const HomePage = () => {
         }
     };
     const handleListHouse = async () => {
-        if (!price || !tokenId) {
+        if (!price) {
             message.error('请输入有效的房产ID和价格');
             return;
         }
@@ -176,7 +176,7 @@ const HomePage = () => {
             // 将价格从 ETH 转换为 wei
             const priceInWei = web3.utils.toWei(price.toString(), 'ether');
     
-            await BuyMyRoomContract.methods.listHouse(tokenId, priceInWei).send({ from: account });
+            await BuyMyRoomContract.methods.listHouse(tokenId, priceInWei).send({ from: account, gas: '300000' });
             message.success('房屋成功出售');
             fetchUserHouses(account);
             setIsModalVisible(false);

@@ -43,7 +43,7 @@ contract BuyMyRoom is ERC721 {
     // // 列出房屋以供出售
     function listHouse(uint256 tokenId, uint256 price) external {
         // require(ownerOf(tokenId) == msg.sender, "You are not the owner"); // 确保调用者是房屋拥有者
-        require(price > 0, "Price must be greater than zero"); // 确保价格大于零
+        // require(price > 0, "Price must be greater than zero"); // 确保价格大于零
 
         houses[tokenId].isForSale = true; // 设置房屋为出售状态
         houses[tokenId].price = price; // 设置出售价格
